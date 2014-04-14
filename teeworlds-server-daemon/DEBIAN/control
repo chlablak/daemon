@@ -1,0 +1,10 @@
+Package: teeworlds-server-daemon
+Version: 1.0
+Section: base
+Priority: optional
+Architecture: all
+Depends: bash
+Maintainer: 2code4one.com <support@2code4one.com>
+Description: Teeworlds Server Daemon
+Homepage: http://www.2code4one.com/
+
