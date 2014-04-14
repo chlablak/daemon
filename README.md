@@ -1,4 +1,2 @@
-daemon
-======
-
 Teeworlds Server Daemon
+=======================
