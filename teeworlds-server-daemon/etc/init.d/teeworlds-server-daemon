@@ -1,0 +1,75 @@
+#!/bin/sh
+
+# Get configuration
+if [ -f /etc/default/teeworlds-server-daemon ]; then
+	. /etc/default/teeworlds-server-daemon
+else
+	echo '/etc/default/teeworlds-server-daemon not found'
+	exit 1
+fi
+
+# Get lsb functions
+. /lib/lsb/init-functions
+
+# Switch behaviors
+case $1 in
+	start)
+		log_begin_msg 'Starting Teeworlds servers...'
+		
+		# Loop on config files
+		started=0
+		echo '' > $RUNNING
+		for i in `ls $SETTINGS | grep .cfg`
+		do#####################################################################CHECK STARTED SERVER
+			# Get absolute path
+			log=`echo $i | cut -d . -f 1`
+			log="$LOGS$log.log"
+			settings=$SETTINGS$i
+
+			# Remove settings 'logfile'
+			cat $settings | grep --invert-match logfile > $settings
+
+			# Get the server binary
+			srv='vanilla'
+			if [ `cat $settings | grep '#!' | wc -l` = '1' ]
+			then
+				srv=`cat $settings | grep '#!' | cut -d '!' -f 2`
+			fi
+			server=$SERVERS$srv
+
+			if [ -f $server ]
+			then
+				nohup $server -f $settings > $log 2>&1 &
+				pid=`ps -ef | grep $i | awk '{$1=$1}{ print }' | cut -d ' ' -f 2` ################################
+				echo "$pid $i" >> $RUNNING
+				started=`expr $started + 1`
+				log_success_msg "\t$i ($srv) started"
+			else
+				log_failure_msg "\tSpecial server $srv for $i does not exist" ####################################
+			fi
+		done
+		log_success_msg "$started server(s) started"
+
+		log_end_msg $?
+	;;
+	stop)
+		log_begin_msg 'Stopping Teeworlds servers...'
+
+		log_end_msg $?
+	;;
+	restart)
+		$LAUNCHER stop
+		sleep 1
+		$LAUNCHER start
+	;;
+	status)
+	;;
+	loads)
+	;;
+	*)
+		log_success_msg "Usage: $LAUNCHER {start|stop|restart|status|loads}" 
+	;;
+esac
+
+exit 0
+

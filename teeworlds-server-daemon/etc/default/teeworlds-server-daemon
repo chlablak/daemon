@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# Globals parameters
+LAUNCHER='/etc/init.d/teeworlds-server-daemon'
+CHECKER='/usr/bin/teeworlds-server-daemon-checker'
+SETTINGS='/etc/teeworlds-server-daemon/'
+SERVERS='/usr/bin/teeworlds-server-daemon/'
+LOGS='/var/log/teeworlds-server-daemon/'
+RUNNING='/var/log/teeworlds-server-daemon/running.info'
+
+# Check paths
+if [ ! -f $LAUNCHER ] || [ ! -f $CHECKER ] || [ ! -d $SETTINGS ] || [ ! -d $SERVERS ] || [ ! -d $LOGS ]
+then
+	echo 'teeworlds-server-daemon is not correctly installed'
+	exit 1
+fi 
+
