@@ -9,22 +9,45 @@ else
 fi
 
 # Get lsb functions
-. /lib/lsb/init-functions
+if [ -f /lib/lsb/init-functions ]; then
+	. /lib/lsb/init-functions
+else
+	echo '/lib/lsb/init-functions not found'
+	exit 1
+fi
 
-# Switch behaviors
+# Commands
 case $1 in
+
+	# Start servers
 	start)
 		log_begin_msg 'Starting Teeworlds servers...'
-		
-		# Loop on config files
-		started=0
+
+		# Clear running info
 		echo '' > $RUNNING
-		for i in `ls $SETTINGS | grep .cfg`
-		do#####################################################################CHECK STARTED SERVER
+
+		# Get the date and log it
+		date=`date +%Y/%m/%d`
+		hour=`date +%H:%M`
+		echo "date: $date $hour" >> $RUNNING
+
+		# Count started server
+		started=0
+
+		# Loop on config files
+		for config in `ls $SETTINGS | grep .cfg`
+		do
+			# Check if already started
+			if [ `cat $RUNNING | grep $config | wc -l` = '1' ]
+			then
+				log_success_msg "\t$config is already started"
+				continue
+			fi
+
 			# Get absolute path
-			log=`echo $i | cut -d . -f 1`
+			log=`echo $config | cut -d . -f 1`
 			log="$LOGS$log.log"
-			settings=$SETTINGS$i
+			settings=$SETTINGS$config
 
 			# Remove settings 'logfile'
 			cat $settings | grep --invert-match logfile > $settings
@@ -37,39 +60,61 @@ case $1 in
 			fi
 			server=$SERVERS$srv
 
+			# Check if server binary exists
 			if [ -f $server ]
 			then
+				# Start the server
 				nohup $server -f $settings > $log 2>&1 &
-				pid=`ps -ef | grep $i | awk '{$1=$1}{ print }' | cut -d ' ' -f 2` ################################
-				echo "$pid $i" >> $RUNNING
+
+				# Get the PID and log it
+				pid=`ps -ef | grep $config | awk '{$1=$1}{ print }' | cut -d ' ' -f 2` 
+				echo "pid: $pid" ###############################################
+				echo "started: $pid $config" >> $RUNNING
+
+				# Count started server
 				started=`expr $started + 1`
-				log_success_msg "\t$i ($srv) started"
+
+				# Server started
+				log_success_msg "\t$config ($srv) started"
 			else
-				log_failure_msg "\tSpecial server $srv for $i does not exist" ####################################
+				# No binary found 
+				log_failure_msg "\tSpecial server $srv for $config does not exist"
 			fi
 		done
-		log_success_msg "$started server(s) started"
 
+		# Success
+		log_success_msg "$started server(s) started"
 		log_end_msg $?
 	;;
+
+	# Stop servers
 	stop)
 		log_begin_msg 'Stopping Teeworlds servers...'
 
 		log_end_msg $?
 	;;
+
+	# Restart servers
 	restart)
+		# Stop and start servers with a "in-between" pause
 		$LAUNCHER stop
 		sleep 1
 		$LAUNCHER start
 	;;
+
+	# Servers status
 	status)
 	;;
+
+	# Servers loads
 	loads)
 	;;
+
+	# Help
 	*)
 		log_success_msg "Usage: $LAUNCHER {start|stop|restart|status|loads}" 
 	;;
-esac
 
-exit 0
+# End of file
+esac
 

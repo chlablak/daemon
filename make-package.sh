@@ -18,6 +18,3 @@ mv "$SRC.deb" $DST
 # Logging
 echo "$DST/$SRC.deb successfully created"
 
-# End of script
-exit 0
-
