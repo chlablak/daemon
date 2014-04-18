@@ -24,12 +24,10 @@ case $1 in
 		log_begin_msg 'Starting Teeworlds servers...'
 
 		# Clear running info
-		echo '' > $RUNNING
-
 		# Get the date and log it
 		date=`date +%Y/%m/%d`
 		hour=`date +%H:%M`
-		echo "date: $date $hour" >> $RUNNING
+		echo "date: $date $hour" > $RUNNING
 
 		# Count started server
 		started=0
@@ -68,7 +66,6 @@ case $1 in
 
 				# Get the PID and log it
 				pid=`ps -ef | grep $config | awk '{$1=$1}{ print }' | cut -d ' ' -f 2` 
-				echo "pid: $pid" ###############################################
 				echo "started: $pid $config" >> $RUNNING
 
 				# Count started server
