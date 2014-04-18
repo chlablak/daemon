@@ -25,36 +25,36 @@ case $1 in
 
 		# Clear running info
 		# Get the date and log it
-		date=`date +%Y/%m/%d`
-		hour=`date +%H:%M`
+		date=$(date +%Y/%m/%d)
+		hour=$(date +%H:%M)
 		echo "date: $date $hour" > $RUNNING
 
 		# Count started server
 		started=0
 
 		# Loop on config files
-		for config in `ls $SETTINGS | grep .cfg`
+		for config in $(ls $SETTINGS | grep .cfg)
 		do
-			# Check if already started
-			if [ `cat $RUNNING | grep $config | wc -l` = '1' ]
+			# Check if already started #############################################
+			if [ $(cat $RUNNING | grep $config | wc -l) = 1 ]
 			then
-				log_success_msg "\t$config is already started"
+				log_success_msg "$config is already started"
 				continue
 			fi
 
 			# Get absolute path
-			log=`echo $config | cut -d . -f 1`
+			log=$(echo $config | cut -d . -f 1)
 			log="$LOGS$log.log"
 			settings=$SETTINGS$config
 
 			# Remove settings 'logfile'
 			cat $settings | grep --invert-match logfile > $settings
 
-			# Get the server binary
+			# Get the server binary #################################################3
 			srv='vanilla'
-			if [ `cat $settings | grep '#!' | wc -l` = '1' ]
+			if [ $(cat $settings | grep '#!' | wc -l) = 1 ]
 			then
-				srv=`cat $settings | grep '#!' | cut -d '!' -f 2`
+				srv=$(cat $settings | grep '#!' | cut -d '!' -f 2)
 			fi
 			server=$SERVERS$srv
 
@@ -64,18 +64,18 @@ case $1 in
 				# Start the server
 				nohup $server -f $settings > $log 2>&1 &
 
-				# Get the PID and log it
-				pid=`ps -ef | grep $config | awk '{$1=$1}{ print }' | cut -d ' ' -f 2` 
+				# Get the PID and log it ###################################################
+				pid=$(ps -ef | grep "$server -f $config" | awk '{$1=$1}{ print }' | cut -d ' ' -f 2)
 				echo "started: $pid $config" >> $RUNNING
 
 				# Count started server
-				started=`expr $started + 1`
+				started=$(expr $started + 1)
 
 				# Server started
-				log_success_msg "\t$config ($srv) started"
+				log_success_msg "$config ($srv) started"
 			else
-				# No binary found 
-				log_failure_msg "\tSpecial server $srv for $config does not exist"
+				# No binary found #############################################################3
+				log_failure_msg "Special server $srv for $config does not exist"
 			fi
 		done
 
