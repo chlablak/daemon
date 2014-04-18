@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Get configuration
 if [ -f /etc/default/teeworlds-server-daemon ]; then
