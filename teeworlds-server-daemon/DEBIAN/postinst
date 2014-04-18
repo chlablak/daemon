@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# Remove tokens
+rm /etc/teeworlds-server-daemon/token
+rm /etc/teeworlds-server-daemon/disabled/token
+rm /usr/bin/teeworlds-server-daemon/token
+rm /usr/bin/teeworlds-server-daemon/data/maps/token
+rm /usr/bin/teeworlds-server-daemon/data/mapres/token
+
+# Copy Teeworlds resources
+cp /usr/games/teeworlds-server /usr/bin/teeworlds-server-daemon/vanilla
+cp /usr/share/games/teeworlds/data/maps/* /usr/bin/teeworlds-server-daemon/data/maps/
+cp /usr/share/games/teeworlds/data/mapres/* /usr/bin/teeworlds-server-daemon/data/mapres/
+

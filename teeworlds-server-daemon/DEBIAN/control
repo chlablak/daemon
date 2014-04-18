@@ -3,7 +3,7 @@ Version: 1.0
 Section: base
 Priority: optional
 Architecture: all
-Depends: bash teeworlds-server teeworlds-data
+Depends: bash, teeworlds-server, teeworlds-data
 Maintainer: 2code4one.com <support@2code4one.com>
 Description: Teeworlds Server Daemon
 Homepage: http://www.2code4one.com/
