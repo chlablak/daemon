@@ -23,9 +23,6 @@ case "$1" in
 	start)
 		log_begin_msg 'Starting Teeworlds servers...'
 
-		# Clearing
-		echo '' > $RUNNING
-
 		# Get the date 
 		date=$(date +%Y/%m/%d)
 		hour=$(date +%H:%M)
@@ -40,7 +37,7 @@ case "$1" in
 			already=$(cat $RUNNING | grep $config | wc -l)
 			if [ $already = '1' ]
 			then
-				log_success_msg "$config is already started"
+				log_success_msg "$config is already running"
 				continue
 			fi
 
@@ -69,7 +66,7 @@ case "$1" in
 			if [ -f $server ]
 			then
 				# Start the server
-				nohup $server -f $tmpsettings > $log 2>&1 &
+				nohup $server -f $tmpsettings > $log 2>&1 < /dev/null &
 
 				# Get the PID and log it
 				pid=$!
