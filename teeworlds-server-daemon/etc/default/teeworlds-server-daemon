@@ -8,6 +8,7 @@ SERVERS='/usr/bin/teeworlds-server-daemon'
 LOGS='/var/log/teeworlds-server-daemon'
 RUNNING='/var/log/teeworlds-server-daemon/running.info'
 TMP='/tmp/teeworlds-server-daemon'
+TMPFILE='/tmp/teeworlds-server-daemon/tmpfile'
 
 # Check paths
 if [ ! -f "$LAUNCHER" ] || [ ! -f "$CHECKER" ] || [ ! -d "$SETTINGS" ] || [ ! -d "$SERVERS" ] || [ ! -d "$LOGS" ] || [ ! -d "$TMP" ]

@@ -37,7 +37,7 @@ case "$1" in
 			already=$(cat $RUNNING | grep $config | wc -l)
 			if [ $already = '1' ]
 			then
-				log_success_msg "$config is already running"
+				log_failure_msg "$config is already running"
 				continue
 			fi
 
@@ -50,8 +50,9 @@ case "$1" in
 			tmpsettings="$TMP/$config"
 
 			# Remove unwanted settings
-			cat $tmpsettings | grep --invert-match '#!' > $tmpsettings
-			cat $tmpsettings | grep --invert-match 'logfile' > $tmpsettings
+			cat $tmpsettings | grep -v '#!' > $TMPFILE
+			cat $TMPFILE | grep -v 'logfile' > $tmpsettings
+			rm $TMPFILE
 
 			# Get the server binary
 			srv='vanilla'
@@ -66,7 +67,7 @@ case "$1" in
 			if [ -f $server ]
 			then
 				# Start the server
-				nohup $server -f $tmpsettings > $log 2>&1 < /dev/null &
+				nohup $server -f $config > $log 2>&1 < /dev/null &
 
 				# Get the PID and log it
 				pid=$!
