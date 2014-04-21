@@ -54,9 +54,8 @@ case "$1" in
 			tmpsettings="$TMP/$config"
 
 			# Remove unwanted settings
-			cat $tmpsettings | grep -v '#!' > $TMPFILE
-			cat $TMPFILE | grep -v 'logfile' > $tmpsettings
-			rm $TMPFILE
+			sed -i '/#!/d' $tmpsettings
+			sed -i '/logfile/d' $tmpsettings
 
 			# Get the server binary
 			srv='vanilla'

@@ -8,22 +8,21 @@ SERVERS='/usr/bin/teeworlds-server-daemon'
 LOGS='/var/log/teeworlds-server-daemon'
 RUNNING='/var/log/teeworlds-server-daemon/running.info'
 TMP='/tmp/teeworlds-server-daemon'
-TMPFILE='/tmp/teeworlds-server-daemon/tmpfile'
 
 # Recreate tmp 
 if [ ! -d "$TMP" ]; then
 	mkdir "$TMP"
 fi
 
-# Recreate info
-if [ ! -f "$RUNNING" ]; then
-	touch "$RUNNING"
-fi
-
 # Check paths
-if [ ! -f "$LAUNCHER" ] || [ ! -f "$CHECKER" ] || [ ! -d "$SETTINGS" ] || [ ! -d "$SERVERS" ] || [ ! -d "$LOGS" ] || [ ! -d "$TMP" ]
+if [ ! -f "$LAUNCHER" ] || [ ! -f "$CHECKER" ] || [ ! -d "$SETTINGS" ] || [ ! -d "$SERVERS" ] || [ ! -d "$LOGS" ] 
 then
 	echo 'teeworlds-server-daemon is not correctly installed'
 	exit 1
 fi 
+
+# Recreate info
+if [ ! -f "$RUNNING" ]; then
+	touch "$RUNNING"
+fi
 
