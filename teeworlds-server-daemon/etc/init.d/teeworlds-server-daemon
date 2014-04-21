@@ -16,6 +16,10 @@ else
 	exit 1
 fi
 
+# Get the date 
+date=$(date +%Y/%m/%d)
+hour=$(date +%H:%M)
+
 # Commands
 case "$1" in
 
@@ -23,18 +27,18 @@ case "$1" in
 	start)
 		log_begin_msg 'Starting Teeworlds servers...'
 
-		# Get the date 
-		date=$(date +%Y/%m/%d)
-		hour=$(date +%H:%M)
-
 		# Count started server
 		started=0
+		total=0
 
 		# Loop on config files
 		for config in $(ls $SETTINGS | grep .cfg)
 		do
+			# Count all configs
+			total=$(expr $total + 1)	
+
 			# Check if already started 
-			already=$(cat $RUNNING | grep $config | wc -l)
+			already=$(cat $RUNNING | grep "$config started" | wc -l)
 			if [ $already = '1' ]
 			then
 				log_failure_msg "$config is already running"
@@ -63,6 +67,9 @@ case "$1" in
 			fi
 			server="$SERVERS/$srv"
 
+			# Erase previous running information
+			sed -i "/$config/d" $RUNNING
+
 			# Check if server binary exists
 			if [ -f $server ]
 			then
@@ -71,7 +78,7 @@ case "$1" in
 
 				# Get the PID and log it
 				pid=$!
-				echo "$config started $pid $date $hour" >> $RUNNING
+				echo "$config started $date $hour $pid" >> $RUNNING
 
 				# Count started server
 				started=$(expr $started + 1)
@@ -80,12 +87,13 @@ case "$1" in
 				log_success_msg "$config ($srv) started"
 			else
 				# No binary found 
+				echo "$config stopped $date $hour binary '$srv' not found" >> $RUNNING
 				log_failure_msg "$config: binary '$srv' not found"
 			fi
 		done
 
 		# Success
-		log_success_msg "$started server(s) started"
+		log_success_msg "$started/$total server(s) started"
 		log_end_msg $?
 	;;
 
@@ -93,14 +101,39 @@ case "$1" in
 	stop)
 		log_begin_msg 'Stopping Teeworlds servers...'
 
+		# Count stopped servers
+		count=0
+
+		# Loop on infos
+		while read info
+		do
+			# If server is started
+			started=$(echo $info | cut -d ' ' -f 2)
+			if [ $started = 'started' ]
+			then
+				# Kill the server
+				pid=$(echo $info | cut -d ' ' -f 5)
+				kill $pid 
+
+				# Replace info
+				config=$(echo $info | cut -d ' ' -f 1)
+				sed -i "/$config/d" $RUNNING
+				echo "$config stopped $date $hour" >> $RUNNING
+
+				# Count
+				count=$(expr $count + 1)
+			fi
+		done < $RUNNING
+
+		# Success
+		log_success_msg "$count server(s) stopped"
 		log_end_msg $?
 	;;
 
 	# Restart servers
 	restart)
-		# Stop and start servers with a "in-between" pause
+		# Stop and start servers
 		$LAUNCHER stop
-		sleep 1
 		$LAUNCHER start
 	;;
 
