@@ -25,7 +25,7 @@ case "$1" in
 
 	# Start servers
 	start)
-		log_begin_msg 'Starting Teeworlds servers...'
+		log_begin_msg 'Starting Teeworlds server(s)...'
 
 		# Count started server
 		started=0
@@ -98,7 +98,7 @@ case "$1" in
 
 	# Stop servers
 	stop)
-		log_begin_msg 'Stopping Teeworlds servers...'
+		log_begin_msg 'Stopping Teeworlds server(s)...'
 
 		# Count stopped servers
 		count=0
@@ -175,11 +175,55 @@ case "$1" in
 
 	# Servers configs
 	config)
+		log_begin_msg 'Server(s) configurations...'
+
+		# Loop on config files
+		for config in $(ls $SETTINGS | grep .cfg)
+		do
+			# Get absolute path
+			settings="$SETTINGS/$config"
+
+			# Extract infos
+			port=$(cat $settings | grep sv_port | cut -d ' ' -f 2)
+			register=$(cat $settings | grep sv_register | cut -d ' ' -f 2)
+			max_clients=$(cat $settings | grep sv_max_clients | cut -d ' ' -f 2)
+			gametype=$(cat $settings | grep sv_gametype | cut -d ' ' -f 2)
+
+			# Correct for default value
+			if [ -z $port ]; then
+				port='<default>'
+			fi
+			if [ -z $max_clients ]; then
+				max_clients='<default>'
+			fi
+			if [ -z $gametype ]; then
+				gametype='<default>'
+			fi
+
+			# Pretty output
+			isregister='is'
+			if [ "$register" = '0' ]; then
+			   isregister='is not'
+			fi	   
+			
+			# Get the server binary
+			srv='vanilla'
+			specialsrv=$(cat $settings | grep '#!' | wc -l)
+			if [ $specialsrv = '1' ]; then
+				srv=$(cat $settings | grep '#!' | cut -d '!' -f 2)
+			fi
+			
+			# Print infos
+			log_success_msg "$config ($srv, $gametype) $isregister registered, use the port $port and has $max_clients slot(s)"
+		done
+
+		# End
+		log_end_msg $?
 	;;
 
 	# Servers loads
 	loads)
-		log_begin_msg 'Servers loads...'
+	log_begin_msg 'Server(s) loads...'
 
 		# Loop on info
 		while read info
