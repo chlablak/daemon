@@ -165,7 +165,7 @@ case "$1" in
 				log_success_msg "$config is running since $localdate at $localhour"
 			else
 				# Print status
-				log_failure_msg "$config is stopped since $localdate at $localhour (detail: $detail)"
+				log_failure_msg "$config is stopped since $localdate at $localhour ($detail)"
 			fi
 		done < $RUNNING
 
@@ -179,6 +179,40 @@ case "$1" in
 
 	# Servers loads
 	loads)
+		log_begin_msg 'Servers loads...'
+
+		# Loop on info
+		while read info
+		do
+			# If server is started
+			started=$(echo $info | cut -d ' ' -f 2)
+			if [ $started = 'started' ]
+			then
+				# Get load info
+				pid=$(echo $info | cut -d ' ' -f 5)
+				load=$(ps -p $pid -o 'pmem,cputime,etimes' --no-headers | awk '{$1=$1}{ print }')
+
+				# Extract infos
+				config=$(echo $info | cut -d ' ' -f 1)
+				pmem=$(echo $load | cut -d ' ' -f 1)
+				cputime=$(echo $load | cut -d ' ' -f 2)
+				etimes=$(echo $load | cut -d ' ' -f 3)
+				
+				# Compute infos
+				cpuhour=$(echo $cputime | cut -d ':' -f 1)
+				cpumin=$(echo $cputime | cut -d ':' -f 2)
+				cpusec=$(echo $cputime | cut -d ':' -f 3)
+				cpusec=$(expr $cpuhour \* 3600 + $cpumin \* 60 + $cpusec)
+				activity=$(echo "$cpusec / $etimes * 100" | bc -l)
+				memory=$(echo "$pmem * 100" | bc -l)
+
+				# Print load
+				log_success_msg "$config used $activity% of the processor time and is using $memory% of memory"
+			fi
+		done < $RUNNING
+
+		# End
+		log_end_msg $?
 	;;
 
 	# Help
