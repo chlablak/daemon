@@ -117,7 +117,7 @@ case "$1" in
 				# Replace info
 				config=$(echo $info | cut -d ' ' -f 1)
 				sed -i "/$config/d" $RUNNING
-				echo "$config stopped $date $hour" >> $RUNNING
+				echo "$config stopped $date $hour stopped by user" >> $RUNNING
 
 				# Count
 				count=$(expr $count + 1)
@@ -138,10 +138,43 @@ case "$1" in
 
 	# Servers status
 	status)
+		# Count servers
+		total=0
+		started=0
+
+		# Loop on infos
+		while read info
+		do
+			# Count servers
+			total=$(expr $total + 1)
+
+			# Extract infos
+			config=$(echo $info | cut -d ' ' -f 1)
+			isstarted=$(echo $info | cut -d ' ' -f 2)
+			localdate=$(echo $info | cut -d ' ' -f 3)
+			localhour=$(echo $info | cut -d ' ' -f 4)
+			detail=$(echo $info | cut -d ' ' -f '5-')
+
+			# If server is started
+			if [ $isstarted = 'started' ]
+			then
+				# Count started servers
+				started=$(expr $started + 1)
+
+				# Print status
+				log_success_msg "$config is running since $localdate at $localhour"
+			else
+				# Print status
+				log_failure_msg "$config is stopped since $localdate at $localhour (detail: $detail)"
+			fi
+		done < $RUNNING
+
+		# Print count
+		log_success_msg "$started/$total server(s) started"
 	;;
 
-	# Servers infos
-	info)
+	# Servers configs
+	config)
 	;;
 
 	# Servers loads
@@ -150,7 +183,15 @@ case "$1" in
 
 	# Help
 	*)
-		log_success_msg "Usage: $LAUNCHER {start|stop|restart|status|info|loads}" 
+		log_success_msg "Usage: $LAUNCHER {action}"
+		log_success_msg 'Actions:'
+		log_success_msg '    start   - start server(s)'
+		log_success_msg '    stop    - stop server(s)'
+		log_success_msg '    restart - stop and start server(s)'
+		log_success_msg '    status  - get server(s) status'
+		log_success_msg '    config  - get server(s) configuration'
+		log_success_msg '    loads   - get server(s) loads'
+		log_success_msg '    help    - print this help'
 	;;
 
 # End of file
