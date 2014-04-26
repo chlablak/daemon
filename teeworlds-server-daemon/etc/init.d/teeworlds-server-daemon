@@ -292,8 +292,12 @@ case "$1" in
 
 	# Help
 	*)
-		log_success_msg "Usage: $LAUNCHER {action}"
-		log_success_msg 'Actions:'
+		log_success_msg 'USAGE :' 
+		log_success_msg "    $LAUNCHER ACTION [CONFIG]..."
+		log_success_msg 'CONFIG:'
+		log_success_msg "    Config file (.cfg) in $SETTINGS/"
+		log_success_msg '    If omitted, apply the action to all config files'
+		log_success_msg 'ACTION:'
 		log_success_msg '    start   - start server(s)'
 		log_success_msg '    stop    - stop server(s)'
 		log_success_msg '    restart - stop and start server(s)'
