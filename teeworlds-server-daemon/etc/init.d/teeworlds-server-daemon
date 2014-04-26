@@ -1,5 +1,13 @@
 #!/bin/bash  
 
+# Get lsb functions
+if [ -f /lib/lsb/init-functions ]; then
+	. /lib/lsb/init-functions
+else
+	echo '/lib/lsb/init-functions not found'
+	exit 1
+fi
+
 # Get configuration
 if [ -f /etc/default/teeworlds-server-daemon ]; then
 	. /etc/default/teeworlds-server-daemon
@@ -8,7 +16,7 @@ else
 	exit 1
 fi
 
-# Check running informations
+# Check if the machine has restarted
 currentboottime=$(who -b | awk '{print $3" "$4}')
 if [ -f $RUNNING ]
 then
@@ -21,17 +29,19 @@ else
 	echo "boottime $currentboottime" > $RUNNING
 fi
 
-# Get lsb functions
-if [ -f /lib/lsb/init-functions ]; then
-	. /lib/lsb/init-functions
-else
-	echo '/lib/lsb/init-functions not found'
-	exit 1
-fi
-
 # Get the date 
 date=$(date +%Y/%m/%d)
 hour=$(date +%H:%M)
+
+# Check if all config are in running informations
+for config in $(ls $SETTINGS | grep '.cfg')
+do
+	exist=$(cat $RUNNING | grep "$config" | wc -l)
+	if [ $exist = '0' ]
+	then
+		echo "$config stopped $date $hour never started" >> $RUNNING
+	fi
+done
 
 # Commands
 case "$1" in
@@ -151,6 +161,8 @@ case "$1" in
 
 	# Servers status
 	status)
+		log_begin_msg 'Server(s) status...'
+
 		# Count servers
 		total=0
 		started=0
@@ -158,6 +170,11 @@ case "$1" in
 		# Loop on infos
 		while read info
 		do
+			# Ignore boottime line
+			if [ $(echo $info | grep 'boottime' | wc -l) = '1' ]; then
+				continue
+			fi
+
 			# Count servers
 			total=$(expr $total + 1)
 
@@ -184,6 +201,7 @@ case "$1" in
 
 		# Print count
 		log_success_msg "$started/$total server(s) started"
+		log_end_msg $?
 	;;
 
 	# Servers configs
@@ -236,7 +254,7 @@ case "$1" in
 
 	# Servers loads
 	loads)
-	log_begin_msg 'Server(s) loads...'
+		log_begin_msg 'Server(s) loads...'
 
 		# Loop on info
 		while read info
