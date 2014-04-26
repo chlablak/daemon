@@ -8,6 +8,19 @@ else
 	exit 1
 fi
 
+# Check running informations
+currentboottime=$(who -b | awk '{print $3" "$4}')
+if [ -f $RUNNING ]
+then
+	runningboottime=$(cat $RUNNING | grep 'boottime' | cut -d ' ' -f '2-')
+	if [ "$currentboottime" != "$runningboottime" ]
+	then
+		echo "boottime $currentboottime" > $RUNNING
+	fi
+else
+	echo "boottime $currentboottime" > $RUNNING
+fi
+
 # Get lsb functions
 if [ -f /lib/lsb/init-functions ]; then
 	. /lib/lsb/init-functions

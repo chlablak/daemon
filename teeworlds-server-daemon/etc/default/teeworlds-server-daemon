@@ -21,8 +21,3 @@ then
 	exit 1
 fi 
 
-# Recreate info
-if [ ! -f "$RUNNING" ]; then
-	touch "$RUNNING"
-fi
-
