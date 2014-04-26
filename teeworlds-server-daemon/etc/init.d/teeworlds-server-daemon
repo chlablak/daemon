@@ -43,8 +43,20 @@ do
 	fi
 done
 
+# Get action
+action="$1"
+
+# Get configs
+configs=( $(ls $SETTINGS | grep '.cfg') )
+if [ $# -gt 1 ]; then
+	configs=( $(echo "$*" | cut -d ' ' -f '2-') )
+	for i in $(seq 0 $(expr ${#configs[*]} - 1)); do
+		configs[$i]="${configs[$i]}.cfg"
+	done
+fi
+
 # Commands
-case "$1" in
+case "$action" in
 
 	# Start servers
 	start)
@@ -52,13 +64,20 @@ case "$1" in
 
 		# Count started server
 		started=0
-		total=0
 
 		# Loop on config files
-		for config in $(ls $SETTINGS | grep .cfg)
+		for config in ${configs[*]}
 		do
-			# Count all configs
-			total=$(expr $total + 1)	
+			# Get absolute path
+			log="$LOGS/$config.log"
+			settings="$SETTINGS/$config"
+
+			# Check for existance
+			if [ ! -f "$settings" ] 
+			then
+				log_failure_msg "$config does not exist"
+				continue
+			fi
 
 			# Check if already started 
 			already=$(cat $RUNNING | grep "$config started" | wc -l)
@@ -67,10 +86,6 @@ case "$1" in
 				log_failure_msg "$config is already running"
 				continue
 			fi
-
-			# Get absolute path
-			log="$LOGS/$config.log"
-			settings="$SETTINGS/$config"
 
 			# Copy settings
 			cp --remove-destination $settings $TMP
@@ -93,7 +108,7 @@ case "$1" in
 			sed -i "/$config/d" $RUNNING
 
 			# Check if server binary exists
-			if [ -f $server ]
+			if [ -f "$server" ]
 			then
 				# Start the server
 				nohup $server -f $config > $log 2>&1 < /dev/null &
@@ -115,7 +130,7 @@ case "$1" in
 		done
 
 		# Success
-		log_success_msg "$started/$total server(s) started"
+		log_success_msg "$started/${#configs[*]} server(s) started"
 		log_end_msg $?
 	;;
 
@@ -124,11 +139,22 @@ case "$1" in
 		log_begin_msg 'Stopping Teeworlds server(s)...'
 
 		# Count stopped servers
-		count=0
+		stopped=0
 
-		# Loop on infos
-		while read info
+		# Loop on config files
+		for config in ${configs[*]}
 		do
+			# Check for existance
+			existance=$(cat $RUNNING | grep $config | wc -l)
+			if [ $existance = '0' ]
+			then
+				log_failure_msg "$config does not exist"
+				continue
+			fi	
+
+			# Get info
+			info=$(cat $RUNNING | grep $config)
+
 			# If server is started
 			started=$(echo $info | cut -d ' ' -f 2)
 			if [ $started = 'started' ]
@@ -138,25 +164,35 @@ case "$1" in
 				kill $pid 
 
 				# Replace info
-				config=$(echo $info | cut -d ' ' -f 1)
 				sed -i "/$config/d" $RUNNING
 				echo "$config stopped $date $hour stopped by user" >> $RUNNING
 
 				# Count
-				count=$(expr $count + 1)
+				stopped=$(expr $stopped + 1)
+
+				# Print
+				log_success_msg "$config stopped"
+			else
+				# Already stopped
+				log_failure_msg "$config is already stopped"
 			fi
-		done < $RUNNING
+		done
 
 		# Success
-		log_success_msg "$count server(s) stopped"
+		log_success_msg "$stopped/${#configs[*]} server(s) stopped"
 		log_end_msg $?
 	;;
 
 	# Restart servers
 	restart)
+		# Remove .cfg
+		for i in $(seq 0 $(expr ${#configs[*]})); do
+			configs[$i]=$(echo "${configs[$i]%.*}")
+		done
+
 		# Stop and start servers
-		$LAUNCHER stop
-		$LAUNCHER start
+		$LAUNCHER stop ${configs[*]}
+		$LAUNCHER start ${configs[*]}
 	;;
 
 	# Servers status
@@ -164,19 +200,21 @@ case "$1" in
 		log_begin_msg 'Server(s) status...'
 
 		# Count servers
-		total=0
 		started=0
 
-		# Loop on infos
-		while read info
+		# Loop on config files
+		for config in ${configs[*]}
 		do
-			# Ignore boottime line
-			if [ $(echo $info | grep 'boottime' | wc -l) = '1' ]; then
+			# Check for existance
+			existance=$(cat $RUNNING | grep $config | wc -l)
+			if [ $existance = '0' ]
+			then
+				log_failure_msg "$config does not exist"
 				continue
-			fi
+			fi	
 
-			# Count servers
-			total=$(expr $total + 1)
+			# Get info
+			info=$(cat $RUNNING | grep $config)
 
 			# Extract infos
 			config=$(echo $info | cut -d ' ' -f 1)
@@ -197,10 +235,10 @@ case "$1" in
 				# Print status
 				log_failure_msg "$config is stopped since $localdate at $localhour ($detail)"
 			fi
-		done < $RUNNING
+		done 
 
 		# Print count
-		log_success_msg "$started/$total server(s) started"
+		log_success_msg "$started/${#configs[*]} server(s) running"
 		log_end_msg $?
 	;;
 
@@ -209,8 +247,16 @@ case "$1" in
 		log_begin_msg 'Server(s) configurations...'
 
 		# Loop on config files
-		for config in $(ls $SETTINGS | grep .cfg)
+		for config in ${configs[*]}
 		do
+			# Check for existance
+			existance=$(cat $RUNNING | grep $config | wc -l)
+			if [ $existance = '0' ]
+			then
+				log_failure_msg "$config does not exist"
+				continue
+			fi	
+
 			# Get absolute path
 			settings="$SETTINGS/$config"
 
@@ -256,9 +302,20 @@ case "$1" in
 	loads)
 		log_begin_msg 'Server(s) loads...'
 
-		# Loop on info
-		while read info
+		# Loop on config files
+		for config in ${configs[*]}
 		do
+			# Check for existance
+			existance=$(cat $RUNNING | grep $config | wc -l)
+			if [ $existance = '0' ]
+			then
+				log_failure_msg "$config does not exist"
+				continue
+			fi	
+
+			# Get info
+			info=$(cat $RUNNING | grep $config)
+
 			# If server is started
 			started=$(echo $info | cut -d ' ' -f 2)
 			if [ $started = 'started' ]
@@ -283,8 +340,11 @@ case "$1" in
 
 				# Print load
 				log_success_msg "$config used $activity% of the processor time and is using $memory% of memory"
+			else
+				# Print
+				log_failure_msg "$config is stopped"
 			fi
-		done < $RUNNING
+		done
 
 		# End
 		log_end_msg $?
@@ -295,7 +355,7 @@ case "$1" in
 		log_success_msg 'USAGE :' 
 		log_success_msg "    $LAUNCHER ACTION [CONFIG]..."
 		log_success_msg 'CONFIG:'
-		log_success_msg "    Config file (.cfg) in $SETTINGS/"
+		log_success_msg "    Config file(s) (without the .cfg) in $SETTINGS/"
 		log_success_msg '    If omitted, apply the action to all config files'
 		log_success_msg 'ACTION:'
 		log_success_msg '    start   - start server(s)'
