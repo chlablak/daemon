@@ -186,7 +186,7 @@ case "$action" in
 	# Restart servers
 	restart)
 		# Remove .cfg
-		for i in $(seq 0 $(expr ${#configs[*]})); do
+		for i in $(seq 0 $(expr ${#configs[*]} - 1)); do
 			configs[$i]=$(echo "${configs[$i]%.*}")
 		done
 
