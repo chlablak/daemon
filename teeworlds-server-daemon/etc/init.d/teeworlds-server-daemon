@@ -249,16 +249,15 @@ case "$action" in
 		# Loop on config files
 		for config in ${configs[*]}
 		do
+			# Get absolute path
+			settings="$SETTINGS/$config"
+			
 			# Check for existance
-			existance=$(cat $RUNNING | grep $config | wc -l)
-			if [ $existance = '0' ]
+			if [ ! -f "$settings" ] 
 			then
 				log_failure_msg "$config does not exist"
 				continue
-			fi	
-
-			# Get absolute path
-			settings="$SETTINGS/$config"
+			fi
 
 			# Extract infos
 			port=$(cat $settings | grep sv_port | cut -d ' ' -f 2)
@@ -325,7 +324,6 @@ case "$action" in
 				load=$(ps -p $pid -o 'pmem,cputime,etimes' --no-headers | awk '{$1=$1}{ print }')
 
 				# Extract infos
-				config=$(echo $info | cut -d ' ' -f 1)
 				pmem=$(echo $load | cut -d ' ' -f 1)
 				cputime=$(echo $load | cut -d ' ' -f 2)
 				etimes=$(echo $load | cut -d ' ' -f 3)
