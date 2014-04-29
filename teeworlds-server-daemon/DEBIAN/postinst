@@ -6,6 +6,7 @@ rm /etc/teeworlds-server-daemon/disabled/token
 rm /usr/bin/teeworlds-server-daemon/data/maps/token
 rm /usr/bin/teeworlds-server-daemon/data/mapres/token
 rm /tmp/teeworlds-server-daemon/token
+rm /var/log/teeworlds-server-daemon/token
 
 # Copy Teeworlds resources
 cp /usr/games/teeworlds-server /usr/bin/teeworlds-server-daemon/vanilla
