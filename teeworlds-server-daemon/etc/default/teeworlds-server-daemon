@@ -21,3 +21,7 @@ then
 	exit 1
 fi 
 
+# Add default storages
+echo "add_path $TMP" > "$SERVERS/storage.cfg"
+echo "add_path $SERVERS/data" >> "$SERVERS/storage.cfg"
+
