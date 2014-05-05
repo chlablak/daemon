@@ -245,6 +245,7 @@ case "$action" in
 	# Servers configs
 	config)
 		log_begin_msg 'Server(s) configurations...'
+		output="$(log_success_msg 'CONFIG SERVER GAMETYPE PORT SLOTS REGISTERED')"
 
 		# Loop on config files
 		for config in ${configs[*]}
@@ -267,19 +268,19 @@ case "$action" in
 
 			# Correct for default value
 			if [ -z $port ]; then
-				port='<default>'
+				port='8303'
 			fi
 			if [ -z $max_clients ]; then
-				max_clients='<default>'
+				max_clients='8'
 			fi
 			if [ -z $gametype ]; then
-				gametype='<default>'
+				gametype='dm'
 			fi
 
 			# Pretty output
-			isregister='is'
+			isregister='yes'
 			if [ "$register" = '0' ]; then
-			   isregister='is not'
+			   isregister='no'
 			fi	   
 			
 			# Get the server binary
@@ -290,8 +291,13 @@ case "$action" in
 			fi
 			
 			# Print infos
-			log_success_msg "$config ($srv, $gametype) $isregister registered, use the port $port and has $max_clients slot(s)"
+			output="$output\n$(log_success_msg "$config $srv $gametype $port $max_clients $isregister")"
 		done
+
+		# Print
+		if [ "$(echo -e "$output" | wc -l)" != '1' ]; then
+			echo -e "$output" | column -t
+		fi
 
 		# End
 		log_end_msg $?
@@ -300,6 +306,7 @@ case "$action" in
 	# Servers loads
 	loads)
 		log_begin_msg 'Server(s) loads...'
+		output="$(log_success_msg 'CONFIG CPU-TIME-USED MEMORY-USE')"
 
 		# Loop on config files
 		for config in ${configs[*]}
@@ -333,16 +340,21 @@ case "$action" in
 				cpumin=$(echo $cputime | cut -d ':' -f 2)
 				cpusec=$(echo $cputime | cut -d ':' -f 3)
 				cpusec=$(expr $cpuhour \* 3600 + $cpumin \* 60 + $cpusec)
-				activity=$(echo "$cpusec / $etimes * 100" | bc -l)
-				memory=$(echo "$pmem * 100" | bc -l)
+				activity=$(echo "$cpusec / $etimes * 100" | bc -l | awk '{printf "%.2f", $1}')
+				memory=$(echo "$pmem * 100" | bc -l | awk '{printf "%.2f", $1}')
 
 				# Print load
-				log_success_msg "$config used $activity% of the processor time and is using $memory% of memory"
+				output="$output\n$(log_success_msg "$config $activity% $memory%")"
 			else
 				# Print
-				log_failure_msg "$config is stopped"
+				output="$output\n$(log_failure_msg "$config - -")"
 			fi
 		done
+		
+		# Print
+		if [ "$(echo -e "$output" | wc -l)" != '1' ]; then
+			echo -e "$output" | column -t
+		fi
 
 		# End
 		log_end_msg $?
