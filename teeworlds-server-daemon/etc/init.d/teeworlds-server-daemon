@@ -341,7 +341,7 @@ case "$action" in
 				cpusec=$(echo $cputime | cut -d ':' -f 3)
 				cpusec=$(expr $cpuhour \* 3600 + $cpumin \* 60 + $cpusec)
 				activity=$(echo "$cpusec / $etimes * 100" | bc -l | awk '{printf "%.2f", $1}')
-				memory=$(echo "$pmem * 100" | bc -l | awk '{printf "%.2f", $1}')
+				memory=$(echo "$pmem" | awk '{printf "%.2f", $1}')
 
 				# Get connections
 				log="$LOGS/$config.log"
