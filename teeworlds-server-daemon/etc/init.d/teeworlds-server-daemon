@@ -306,7 +306,7 @@ case "$action" in
 	# Servers loads
 	loads)
 		log_begin_msg 'Server(s) loads...'
-		output="$(log_success_msg 'CONFIG CPU-TIME-USED MEMORY-USE')"
+		output="$(log_success_msg 'CONFIG CPU-TIME-USED MEMORY-USE SLOTS-USE CONNECTIONS')"
 
 		# Loop on config files
 		for config in ${configs[*]}
@@ -343,11 +343,24 @@ case "$action" in
 				activity=$(echo "$cpusec / $etimes * 100" | bc -l | awk '{printf "%.2f", $1}')
 				memory=$(echo "$pmem * 100" | bc -l | awk '{printf "%.2f", $1}')
 
+				# Get connections
+				log="$LOGS/$config.log"
+				connection=$(cat "$log" | grep '\[server\]: player has entered the game' | wc -l)
+				deconnection=$(cat "$log" | grep '\[server\]: client dropped' | wc -l)
+				slots=$(expr $connection - $deconnection)
+				
+				# Get max clients
+				settings="$SETTINGS/$config"
+				max_clients=$(cat $settings | grep sv_max_clients | cut -d ' ' -f 2)
+				if [ -z $max_clients ]; then
+					max_clients='8'
+				fi
+				
 				# Print load
-				output="$output\n$(log_success_msg "$config $activity% $memory%")"
+				output="$output\n$(log_success_msg "$config $activity% $memory% $slots/$max_clients $connection")"
 			else
 				# Print
-				output="$output\n$(log_failure_msg "$config - -")"
+				output="$output\n$(log_failure_msg "$config - - - -")"
 			fi
 		done
 		
