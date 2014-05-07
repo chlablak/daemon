@@ -1,3 +1,29 @@
 #!/bin/bash
 
+# Get configuration
+DEFAULTCONFIG='/etc/default/teeworlds-server-daemon'
+if [ -f "$DEFAULTCONFIG" ]; then
+	. "$DEFAULTCONFIG"
+else
+	echo "$DEFAULTCONFIG not found"
+	exit 1
+fi
+
+# Command
+case "$1" in
+
+	# One time
+	once)
+	;;
+
+	# Infinite
+	start)
+	;;
+
+	# Stop
+	stop)
+	;;
+
+# End of file
+esac
 

@@ -1,18 +1,20 @@
 #!/bin/bash  
 
 # Get lsb functions
-if [ -f /lib/lsb/init-functions ]; then
-	. /lib/lsb/init-functions
+LSBFUNCTIONS='/lib/lsb/init-functions'
+if [ -f "$LSBFUNCTIONS" ]; then
+	. "$LSBFUNCTIONS"
 else
-	echo '/lib/lsb/init-functions not found'
+	echo "$LSBFUNCTIONS not found"
 	exit 1
 fi
 
 # Get configuration
-if [ -f /etc/default/teeworlds-server-daemon ]; then
-	. /etc/default/teeworlds-server-daemon
+DEFAULTCONFIG='/etc/default/teeworlds-server-daemon'
+if [ -f "$DEFAULTCONFIG" ]; then
+	. "$DEFAULTCONFIG"
 else
-	echo '/etc/default/teeworlds-server-daemon not found'
+	echo "$DEFAULTCONFIG not found"
 	exit 1
 fi
 
