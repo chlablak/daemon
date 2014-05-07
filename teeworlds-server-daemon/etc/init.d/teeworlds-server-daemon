@@ -306,7 +306,7 @@ case "$action" in
 	# Servers loads
 	loads)
 		log_begin_msg 'Server(s) loads...'
-		output="$(log_success_msg 'CONFIG CPU-TIME-USED MEMORY-USE SLOTS-USE CONNECTIONS')"
+		output="$(log_success_msg 'CONFIG CPU-USE CPU-TIME-USED MEMORY-USE SLOTS-USE CONNECTIONS')"
 
 		# Loop on config files
 		for config in ${configs[*]}
@@ -328,12 +328,13 @@ case "$action" in
 			then
 				# Get load info
 				pid=$(echo $info | cut -d ' ' -f 5)
-				load=$(ps -p $pid -o 'pmem,cputime,etimes' --no-headers | awk '{$1=$1}{ print }')
+				load=$(ps -p $pid -o 'pmem,cputime,etimes,pcpu' --no-headers | awk '{$1=$1}{ print }')
 
 				# Extract infos
 				pmem=$(echo $load | cut -d ' ' -f 1)
 				cputime=$(echo $load | cut -d ' ' -f 2)
 				etimes=$(echo $load | cut -d ' ' -f 3)
+				pcpu=$(echo $load | cut -d ' ' -f 4)
 				
 				# Compute infos
 				cpuhour=$(echo $cputime | cut -d ':' -f 1)
@@ -342,6 +343,7 @@ case "$action" in
 				cpusec=$(expr $cpuhour \* 3600 + $cpumin \* 60 + $cpusec)
 				activity=$(echo "$cpusec / $etimes * 100" | bc -l | awk '{printf "%.2f", $1}')
 				memory=$(echo "$pmem" | awk '{printf "%.2f", $1}')
+				cpuuse=$(echo "$pcpu" | awk '{printf "%.2f", $1}')
 
 				# Get connections
 				log="$LOGS/$config.log"
@@ -357,10 +359,10 @@ case "$action" in
 				fi
 				
 				# Print load
-				output="$output\n$(log_success_msg "$config $activity% $memory% $slots/$max_clients $connection")"
+				output="$output\n$(log_success_msg "$config $cpuuse% $activity% $memory% $slots/$max_clients $connection")"
 			else
 				# Print
-				output="$output\n$(log_failure_msg "$config - - - -")"
+				output="$output\n$(log_failure_msg "$config - - - - -")"
 			fi
 		done
 		
