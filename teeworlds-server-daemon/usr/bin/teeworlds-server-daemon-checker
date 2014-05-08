@@ -9,19 +9,61 @@ else
 	exit 1
 fi
 
+# Useful files
+PIDFILE="$TMP/checker.pid"
+LOCKFILE="$TMP/checker.lock"
+
 # Command
 case "$1" in
 
 	# One time
 	once)
-	;;
+		# Wait for unlocking
+		while [ -f $LOCKFILE ]
+		do
+			sleep 1
+		done
 
-	# Infinite
-	start)
+		# Lock !
+		touch $LOCKFILE
+
+		# TODO
+		# ...
+
+		# Unlock !
+		rm $LOCKFILE
 	;;
 
 	# Stop
-	stop)
+	kill)
+		# Check for running
+		if [ -f $PIDFILE ]
+		then
+			# Get the PID
+			pid=`cat $PIDFILE`
+
+			# Kill the process
+			kill $pid
+
+			# Remove file
+			rm $PIDFILE
+		fi
+	;;
+
+	# Infinite
+	*)
+		# Log the PID
+		echo $$ > $PIDFILE
+
+		# Loop
+		while [ true ]
+		do
+			# Sleep
+			sleep $CHECKINTERVAL
+
+			# Run the check
+			$CHECKER once
+		done
 	;;
 
 # End of file
