@@ -9,6 +9,33 @@ else
 	exit 1
 fi
 
+# Add default storages
+echo "add_path $TMP" > "$SERVERS/storage.cfg"
+echo "add_path $SERVERS/data" >> "$SERVERS/storage.cfg"
+
+# Check if the machine has restarted
+currentboottime=$(who -b | awk '{print $3" "$4}')
+if [ -f $RUNNING ]
+then
+	runningboottime=$(cat $RUNNING | grep 'boottime' | cut -d ' ' -f '2-')
+	if [ "$currentboottime" != "$runningboottime" ]
+	then
+		echo "boottime $currentboottime" > $RUNNING
+	fi
+else
+	echo "boottime $currentboottime" > $RUNNING
+fi
+
+# Check if all config are in running informations
+for config in $(ls $SETTINGS | grep '.cfg')
+do
+	exist=$(cat $RUNNING | grep "$config" | wc -l)
+	if [ $exist = '0' ]
+	then
+		echo "$config stopped $DATE $HOUR never started" >> $RUNNING
+	fi
+done
+
 # Useful files
 PIDFILE="$TMP/checker.pid"
 LOCKFILE="$TMP/checker.lock"
@@ -27,8 +54,7 @@ case "$1" in
 		# Lock !
 		touch $LOCKFILE
 
-		# TODO
-		# ...
+		# 		
 
 		# Unlock !
 		rm $LOCKFILE

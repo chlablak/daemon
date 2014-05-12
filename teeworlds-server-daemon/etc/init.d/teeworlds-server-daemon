@@ -18,33 +18,6 @@ else
 	exit 1
 fi
 
-# Check if the machine has restarted
-currentboottime=$(who -b | awk '{print $3" "$4}')
-if [ -f $RUNNING ]
-then
-	runningboottime=$(cat $RUNNING | grep 'boottime' | cut -d ' ' -f '2-')
-	if [ "$currentboottime" != "$runningboottime" ]
-	then
-		echo "boottime $currentboottime" > $RUNNING
-	fi
-else
-	echo "boottime $currentboottime" > $RUNNING
-fi
-
-# Get the date 
-date=$(date +%Y/%m/%d)
-hour=$(date +%H:%M)
-
-# Check if all config are in running informations
-for config in $(ls $SETTINGS | grep '.cfg')
-do
-	exist=$(cat $RUNNING | grep "$config" | wc -l)
-	if [ $exist = '0' ]
-	then
-		echo "$config stopped $date $hour never started" >> $RUNNING
-	fi
-done
-
 # Get action
 action="$1"
 
@@ -56,6 +29,9 @@ if [ $# -gt 1 ]; then
 		configs[$i]="${configs[$i]}.cfg"
 	done
 fi
+
+# Check before acting
+$CHECKER once
 
 # Commands
 case "$action" in
@@ -117,7 +93,7 @@ case "$action" in
 
 				# Get the PID and log it
 				pid=$!
-				echo "$config started $date $hour $pid" >> $RUNNING
+				echo "$config started $DATE $HOUR $pid" >> $RUNNING
 
 				# Count started server
 				started=$(expr $started + 1)
@@ -126,10 +102,16 @@ case "$action" in
 				log_success_msg "$config ($srv) started"
 			else
 				# No binary found 
-				echo "$config stopped $date $hour binary '$srv' not found" >> $RUNNING
+				echo "$config stopped $DATE $HOUR binary '$srv' not found" >> $RUNNING
 				log_failure_msg "$config: binary '$srv' not found"
 			fi
 		done
+
+		# Start checking
+		count_started=$(cat $RUNNING | cut -d ' ' -f 2 | grep 'started' | wc -l)
+		if [ $count_started -gt 0 ]; then
+			nohup $CHECKER > "$TMP/checker.log" 2>&1 < /dev/null &
+		fi 
 
 		# Success
 		log_success_msg "$started/${#configs[*]} server(s) started"
@@ -167,7 +149,7 @@ case "$action" in
 
 				# Replace info
 				sed -i "/$config/d" $RUNNING
-				echo "$config stopped $date $hour stopped by user" >> $RUNNING
+				echo "$config stopped $DATE $HOUR stopped by user" >> $RUNNING
 
 				# Count
 				stopped=$(expr $stopped + 1)
@@ -180,6 +162,12 @@ case "$action" in
 			fi
 		done
 
+		# Stop checking
+		count_started=$(cat $RUNNING | cut -d ' ' -f 2 | grep 'started' | wc -l)
+		if [ $count_started -eq 0 ]; then
+			$CHECKER kill
+		fi
+ 
 		# Success
 		log_success_msg "$stopped/${#configs[*]} server(s) stopped"
 		log_end_msg $?
