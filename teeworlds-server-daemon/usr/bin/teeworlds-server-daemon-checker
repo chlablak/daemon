@@ -54,7 +54,47 @@ case "$1" in
 		# Lock !
 		touch $LOCKFILE
 
-		# 		
+		# Get configs
+		configs=$(cat $RUNNING | grep -v 'boottime' | cut -d ' ' -f 1)
+		
+		# Loop 
+		for config in $configs
+		do
+			# Get info
+			info=$(cat $RUNNING | grep $config)
+
+			# Get the current status
+			stat=$(echo $info | cut -d ' ' -f 2)
+
+			# Checking cases
+			case $stat in
+
+				# The server is started
+				started)
+
+					# Get the PID
+					pid=$(echo $info | cut -d ' ' -f 5)
+
+					# Check if the server is really started
+					started=$(ps -p $pid -o 'cmd' --no-headers | grep $config | wc -l)
+					if [ $started -eq 0 ]
+					then
+						# The server is not running
+						sed -i "/$config/d" $RUNNING
+						echo "$config stopped $DATE $HOUR application exit" >> $RUNNING
+					fi
+
+				;;
+
+				# The server is stopped
+				stopped)
+
+					# Nothing to do
+
+				;;
+			
+			esac
+		done		
 
 		# Unlock !
 		rm $LOCKFILE
@@ -78,18 +118,22 @@ case "$1" in
 
 	# Infinite
 	*)
-		# Log the PID
-		echo $$ > $PIDFILE
+		# Check for running
+		if [ ! -f $PIDFILE ]
+		then  
+			# Log the PID
+			echo $$ > $PIDFILE
 
-		# Loop
-		while [ true ]
-		do
-			# Sleep
-			sleep $CHECKINTERVAL
+			# Loop
+			while [ true ]
+			do
+				# Sleep
+				sleep $CHECKINTERVAL
 
-			# Run the check
-			$CHECKER once
-		done
+				# Run the check
+				$CHECKER once
+			done
+		fi
 	;;
 
 # End of file
