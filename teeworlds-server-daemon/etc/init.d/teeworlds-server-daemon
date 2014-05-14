@@ -1,14 +1,5 @@
 #!/bin/bash  
 
-# Get lsb functions
-LSBFUNCTIONS='/lib/lsb/init-functions'
-if [ -f "$LSBFUNCTIONS" ]; then
-	. "$LSBFUNCTIONS"
-else
-	echo "$LSBFUNCTIONS not found"
-	exit 1
-fi
-
 # Get configuration
 DEFAULTCONFIG='/etc/default/teeworlds-server-daemon'
 if [ -f "$DEFAULTCONFIG" ]; then
@@ -38,7 +29,7 @@ case "$action" in
 
 	# Start servers
 	start)
-		log_begin_msg 'Starting Teeworlds server(s)...'
+		echo '* Starting Teeworlds server(s)...'
 
 		# Count started server
 		started=0
@@ -53,7 +44,7 @@ case "$action" in
 			# Check for existance
 			if [ ! -f "$settings" ] 
 			then
-				log_failure_msg "$config does not exist"
+				echo "* $config does not exist"
 				continue
 			fi
 
@@ -61,7 +52,7 @@ case "$action" in
 			already=$(cat $RUNNING | grep "$config started" | wc -l)
 			if [ $already = '1' ]
 			then
-				log_failure_msg "$config is already running"
+				echo "* $config is already running"
 				continue
 			fi
 
@@ -99,11 +90,11 @@ case "$action" in
 				started=$(expr $started + 1)
 
 				# Server started
-				log_success_msg "$config ($srv) started"
+				echo "* $config ($srv) started"
 			else
 				# No binary found 
 				echo "$config stopped $DATE $HOUR binary '$srv' not found" >> $RUNNING
-				log_failure_msg "$config: binary '$srv' not found"
+				echo "* $config: binary '$srv' not found"
 			fi
 		done
 
@@ -114,13 +105,13 @@ case "$action" in
 		fi 
 
 		# Success
-		log_success_msg "$started/${#configs[*]} server(s) started"
-		log_end_msg $?
+		echo "* $started/${#configs[*]} server(s) started"
+		echo '  ...done.'
 	;;
 
 	# Stop servers
 	stop)
-		log_begin_msg 'Stopping Teeworlds server(s)...'
+		echo '* Stopping Teeworlds server(s)...'
 
 		# Count stopped servers
 		stopped=0
@@ -132,7 +123,7 @@ case "$action" in
 			existance=$(cat $RUNNING | grep $config | wc -l)
 			if [ $existance = '0' ]
 			then
-				log_failure_msg "$config does not exist"
+				echo "* $config does not exist"
 				continue
 			fi	
 
@@ -155,10 +146,10 @@ case "$action" in
 				stopped=$(expr $stopped + 1)
 
 				# Print
-				log_success_msg "$config stopped"
+				echo "* $config stopped"
 			else
 				# Already stopped
-				log_failure_msg "$config is already stopped"
+				echo "* $config is already stopped"
 			fi
 		done
 
@@ -169,8 +160,8 @@ case "$action" in
 		fi
  
 		# Success
-		log_success_msg "$stopped/${#configs[*]} server(s) stopped"
-		log_end_msg $?
+		echo "* $stopped/${#configs[*]} server(s) stopped"
+		echo '  ...done.'
 	;;
 
 	# Restart servers
@@ -187,7 +178,7 @@ case "$action" in
 
 	# Servers status
 	status)
-		log_begin_msg 'Server(s) status...'
+		echo '* Server(s) status...'
 
 		# Count servers
 		started=0
@@ -199,7 +190,7 @@ case "$action" in
 			existance=$(cat $RUNNING | grep $config | wc -l)
 			if [ $existance = '0' ]
 			then
-				log_failure_msg "$config does not exist"
+				echo "* $config does not exist"
 				continue
 			fi	
 
@@ -220,22 +211,22 @@ case "$action" in
 				started=$(expr $started + 1)
 
 				# Print status
-				log_success_msg "$config is running since $localdate at $localhour"
+				echo "* $config is running since $localdate at $localhour"
 			else
 				# Print status
-				log_failure_msg "$config is stopped since $localdate at $localhour ($detail)"
+				echo "* $config is stopped since $localdate at $localhour ($detail)"
 			fi
 		done 
 
 		# Print count
-		log_success_msg "$started/${#configs[*]} server(s) running"
-		log_end_msg $?
+		echo "* $started/${#configs[*]} server(s) running"
+		echo '  ...done.'
 	;;
 
 	# Servers configs
 	config)
-		log_begin_msg 'Server(s) configurations...'
-		output="$(log_success_msg 'CONFIG SERVER GAMETYPE PORT SLOTS REGISTERED')"
+		echo '* Server(s) configurations...'
+		output="$(echo '* CONFIG SERVER GAMETYPE PORT SLOTS REGISTERED')"
 
 		# Loop on config files
 		for config in ${configs[*]}
@@ -246,7 +237,7 @@ case "$action" in
 			# Check for existance
 			if [ ! -f "$settings" ] 
 			then
-				log_failure_msg "$config does not exist"
+				echo "* $config does not exist"
 				continue
 			fi
 
@@ -281,7 +272,7 @@ case "$action" in
 			fi
 			
 			# Print infos
-			output="$output\n$(log_success_msg "$config $srv $gametype $port $max_clients $isregister")"
+			output="$output\n$(echo "* $config $srv $gametype $port $max_clients $isregister")"
 		done
 
 		# Print
@@ -290,13 +281,13 @@ case "$action" in
 		fi
 
 		# End
-		log_end_msg $?
+		echo '  ...done.'
 	;;
 
 	# Servers loads
 	loads)
-		log_begin_msg 'Server(s) loads...'
-		output="$(log_success_msg 'CONFIG CPU-USE CPU-TIME-USED MEMORY-USE SLOTS-USE CONNECTIONS')"
+		echo '* Server(s) loads...'
+		output="$(echo '* CONFIG CPU-USE CPU-TIME-USED MEMORY-USE SLOTS-USE CONNECTIONS')"
 
 		# Loop on config files
 		for config in ${configs[*]}
@@ -305,7 +296,7 @@ case "$action" in
 			existance=$(cat $RUNNING | grep $config | wc -l)
 			if [ $existance = '0' ]
 			then
-				log_failure_msg "$config does not exist"
+				echo "* $config does not exist"
 				continue
 			fi	
 
@@ -349,10 +340,10 @@ case "$action" in
 				fi
 				
 				# Print load
-				output="$output\n$(log_success_msg "$config $cpuuse% $activity% $memory% $slots/$max_clients $connection")"
+				output="$output\n$(echo "* $config $cpuuse% $activity% $memory% $slots/$max_clients $connection")"
 			else
 				# Print
-				output="$output\n$(log_failure_msg "$config - - - - -")"
+				output="$output\n$(echo "* $config - - - - -")"
 			fi
 		done
 		
@@ -362,24 +353,24 @@ case "$action" in
 		fi
 
 		# End
-		log_end_msg $?
+		echo '  ...done.'
 	;;
 
 	# Help
 	*)
-		log_success_msg 'USAGE :' 
-		log_success_msg "    $LAUNCHER ACTION [CONFIG]..."
-		log_success_msg 'CONFIG:'
-		log_success_msg "    Config file(s) (without the .cfg) in $SETTINGS/"
-		log_success_msg '    If omitted, apply the action to all config files'
-		log_success_msg 'ACTION:'
-		log_success_msg '    start   - start server(s)'
-		log_success_msg '    stop    - stop server(s)'
-		log_success_msg '    restart - stop and start server(s)'
-		log_success_msg '    status  - get server(s) status'
-		log_success_msg '    config  - get server(s) configuration'
-		log_success_msg '    loads   - get server(s) loads'
-		log_success_msg '    help    - print this help'
+		echo '* USAGE :' 
+		echo "*     $LAUNCHER ACTION [CONFIG]..."
+		echo '* CONFIG:'
+		echo "*     Config file(s) (without the .cfg) in $SETTINGS/"
+		echo '*     If omitted, apply the action to all config files'
+		echo '* ACTION:'
+		echo '*     start   - start server(s)'
+		echo '*     stop    - stop server(s)'
+		echo '*     restart - stop and start server(s)'
+		echo '*     status  - get server(s) status'
+		echo '*     config  - get server(s) configuration'
+		echo '*     loads   - get server(s) loads'
+		echo '*     help    - print this help'
 	;;
 
 # End of file
