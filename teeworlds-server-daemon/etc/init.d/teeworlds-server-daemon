@@ -328,7 +328,7 @@ case "$action" in
 
 				# Get connections
 				log="$LOGS/$config.log"
-				connection=$(cat "$log" | grep '\[server\]: player has entered the game' | wc -l)
+				connection=$(cat "$log" | grep '\[server\]: player has entered the game' | cut -d ':' -f '2-' | sort | uniq | wc -l)
 				deconnection=$(cat "$log" | grep '\[server\]: client dropped' | wc -l)
 				slots=$(expr $connection - $deconnection)
 				
