@@ -10,8 +10,7 @@ RUNNING='/var/log/teeworlds-server-daemon/running.info'
 TMP='/tmp/teeworlds-server-daemon'
 
 # Interval between two checks (in seconds)
-#CHECKINTERVAL='300'
-CHECKINTERVAL='10'
+CHECKINTERVAL='300'
 
 # Recreate tmp 
 if [ ! -d "$TMP" ]; then
