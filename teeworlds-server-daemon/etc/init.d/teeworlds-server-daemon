@@ -287,7 +287,7 @@ case "$action" in
 	# Servers loads
 	loads)
 		echo '* Server(s) loads...'
-		output="$(echo '* CONFIG CPU-USE CPU-TIME-USED MEMORY-USE SLOTS-USE CONNECTIONS')"
+		output="$(echo '* CONFIG CPU-USE CPU-TIME-USED MEMORY-USE')"
 
 		# Loop on config files
 		for config in ${configs[*]}
@@ -326,24 +326,11 @@ case "$action" in
 				memory=$(echo "$pmem" | awk '{printf "%.2f", $1}')
 				cpuuse=$(echo "$pcpu" | awk '{printf "%.2f", $1}')
 
-				# Get connections
-				log="$LOGS/$config.log"
-				connection=$(cat "$log" | grep '\[server\]: player has entered the game' | cut -d ':' -f '2-' | sort | uniq | wc -l)
-				deconnection=$(cat "$log" | grep '\[server\]: client dropped' | wc -l)
-				slots=$(expr $connection - $deconnection)
-				
-				# Get max clients
-				settings="$SETTINGS/$config"
-				max_clients=$(cat $settings | grep sv_max_clients | cut -d ' ' -f 2)
-				if [ -z $max_clients ]; then
-					max_clients='8'
-				fi
-				
 				# Print load
-				output="$output\n$(echo "* $config $cpuuse% $activity% $memory% $slots/$max_clients $connection")"
+				output="$output\n$(echo "* $config $cpuuse% $activity% $memory%")"
 			else
 				# Print
-				output="$output\n$(echo "* $config - - - - -")"
+				output="$output\n$(echo "* $config - - -")"
 			fi
 		done
 		
@@ -355,6 +342,55 @@ case "$action" in
 		# End
 		echo '  ...done.'
 	;;
+
+    # Servers statistics
+    stats)
+        echo '* Server(s) statistics...'
+        output="$(echo '* CONFIG CONNECTIONS CONN-PER-DAY')"
+
+		# Loop on config files
+		for config in ${configs[*]}
+		do
+			# Check for existance
+			existance=$(cat $RUNNING | grep $config | wc -l)
+			if [ $existance = '0' ]
+			then
+				echo "* $config does not exist"
+				continue
+			fi	
+
+			# Get info
+			info=$(cat $RUNNING | grep $config)
+
+			# If server is started
+			started=$(echo $info | cut -d ' ' -f 2)
+			if [ $started = 'started' ]
+			then
+				# Get date
+				localdate=$(echo $info | cut -d ' ' -f 3)
+                updays=$(( ($(date +%s --date="$DATE") - $(date +%s --date="$localdate")) / 60*60*24 + 1 ))
+				
+                # Get connections
+                log="$LOGS/$config.log"
+                connection=$(cat "$log" | grep '\[server\]: player has entered the game' | cut -d ':' -f '2-' | sort | uniq | wc -l)
+                perday=$(echo "$connection / $updays" | bc -l | awk '{printf "%.2f", $1}')
+
+				# Print load
+				output="$output\n$(echo "* $config $connection $perday")"
+			else
+				# Print
+				output="$output\n$(echo "* $config - -")"
+			fi
+		done
+		
+		# Print
+		if [ "$(echo -e "$output" | wc -l)" != '1' ]; then
+			echo -e "$output" | column -t
+		fi
+
+        # End
+        echo '  ...done.'
+    ;;
 
 	# Help
 	*)
@@ -370,6 +406,7 @@ case "$action" in
 		echo '*     status  - get server(s) status'
 		echo '*     config  - get server(s) configuration'
 		echo '*     loads   - get server(s) loads'
+        echo '*     stats   - get server(s) statistics'
 		echo '*     help    - print this help'
 	;;
 
