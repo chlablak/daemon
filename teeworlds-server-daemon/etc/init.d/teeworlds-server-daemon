@@ -368,7 +368,7 @@ case "$action" in
 			then
 				# Get date
 				localdate=$(echo $info | cut -d ' ' -f 3)
-                updays=$(( ($(date +%s --date="$DATE") - $(date +%s --date="$localdate")) / 60*60*24 + 1 ))
+                updays=$(( ($(date +%s --date="$DATE") - $(date +%s --date="$localdate")) / (60*60*24) + 1 ))
 				
                 # Get connections
                 log="$LOGS/$config.log"
