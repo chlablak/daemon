@@ -14,7 +14,7 @@ echo "add_path $TMP" > "$SERVERS/storage.cfg"
 echo "add_path $SERVERS/data" >> "$SERVERS/storage.cfg"
 
 # Check if the machine has restarted
-currentboottime=$(who -b | awk '{print $3" "$4}')
+currentboottime=$(date +'%Y-%m-%d %H:%M' --date="$(who -b | sed 's/^[[:space:]]*//' | cut -d ' ' -f '3-')")
 if [ -f $RUNNING ]
 then
 	runningboottime=$(cat $RUNNING | grep 'boottime' | cut -d ' ' -f '2-')

@@ -394,23 +394,45 @@ case "$action" in
 
     # Autostart
     autostart)
+
+        # rc.local
+        rclocal='/etc/rc.local'
         
         # Actions
         case "$2" in
 
             # Activate
             yes)
+                # Remove unwanted lines
+                sed -i "/teeworlds-server-daemon/d" $rclocal
+                sed -i '/exit 0/d' $rclocal
 
+                # Then activate
+                echo "$LAUNCHER start" >> $rclocal
+                echo 'exit 0' >> $rclocal
+
+                # Print
+                echo '* teeworlds-server-daemon autostart enabled'
             ;;
 
             # Desactivate
             no)
+                # Desactivate
+                sed -i "/teeworlds-server-daemon/d" $rclocal
 
+                # Print
+                echo '* teeworlds-server-daemon autostart disabled'
             ;;
 
             # Status
             *)
-
+                # Check
+                if [ $(cat $rclocal | grep "$LAUNCHER" | wc -l) = '1' ]
+                then
+                    echo '* teeworlds-server-daemon autostart is enabled'
+                else
+                    echo '* teeworlds-server-daemon autostart is disabled'
+                fi
             ;;
 
         esac
@@ -442,3 +464,4 @@ case "$action" in
 # End of file
 esac
 
+exit 0 # for /etc/rc.local
