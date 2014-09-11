@@ -392,10 +392,35 @@ case "$action" in
         echo '  ...done.'
     ;;
 
+    # Autostart
+    autostart)
+        
+        # Actions
+        case "$2" in
+
+            # Activate
+            yes)
+
+            ;;
+
+            # Desactivate
+            no)
+
+            ;;
+
+            # Status
+            *)
+
+            ;;
+
+        esac
+    ;;
+
 	# Help
 	*)
 		echo '* USAGE :' 
-		echo "*     $LAUNCHER ACTION [CONFIG]..."
+		echo "*     $LAUNCHER <action> [<config>...]"
+        echo "*     $LAUNCHER autostart [yes|no]"
 		echo '* CONFIG:'
 		echo "*     Config file(s) (without the .cfg) in $SETTINGS/"
 		echo '*     If omitted, apply the action to all config files'
@@ -408,6 +433,10 @@ case "$action" in
 		echo '*     loads   - get server(s) loads'
         echo '*     stats   - get server(s) statistics'
 		echo '*     help    - print this help'
+        echo '* AUTOSTART:'
+        echo '*     yes     - activate autostart at startup'
+        echo '*     no      - desactivate autostart at startup'
+        echo '*     If omitted, print the current behavior (yes or no)'
 	;;
 
 # End of file
